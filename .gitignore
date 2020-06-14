@@ -1,1 +1,3 @@
 go/cmd/tommd/tommd
+go/cmd/tommsrv/.temp.db
+go/cmd/*/__debug_bin
