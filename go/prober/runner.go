@@ -54,7 +54,7 @@ func tcpProbe(ifaces []string, spec *dto.ProbeSpec) *dto.ProbeResult {
 	if spec.Args == nil || len(spec.Args) < 2 {
 		return &dto.ProbeResult{
 			Spec:    spec,
-			Status:  "KO",
+			Status:  "FAIL",
 			Time:    tm,
 			Elapsed: 0,
 			Comment: "Bad arguments in probe spec",
@@ -67,9 +67,9 @@ func tcpProbe(ifaces []string, spec *dto.ProbeSpec) *dto.ProbeResult {
 	if err != nil {
 		return &dto.ProbeResult{
 			Spec:    spec,
-			Status:  "KO",
+			Status:  "FAIL",
 			Time:    tm,
-			Elapsed: 0,
+			Elapsed: int(time.Now().Sub(tm) / time.Millisecond),
 			Comment: err.Error(),
 			Sources: ifaces,
 		}
