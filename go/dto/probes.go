@@ -3,16 +3,40 @@ package dto
 import "time"
 
 type ProbeResult struct {
-	Spec    *ProbeSpec
-	Status  string
-	Time    time.Time
-	Elapsed int
-	Sources []string
-	Comment string
+	Spec    *ProbeSpec `json:"spec"`
+	Status  string     `json:"status"`
+	Time    time.Time  `json:"time"`
+	Elapsed int        `json:"elapsed"`
+	Sources []string   `json:"sources"`
+	Comment string     `json:"comment"`
 }
 
 type ProbeSpec struct {
-	Type    string
-	Args    []string
-	Timeout int
+	Type    string   `json:"type"`
+	Args    []string `json:"args"`
+	Timeout int      `json:"timeout"`
+}
+type ProbeSpecRule struct {
+	Pattern   string   `json:"pattern"`
+	SpecNames []string `json:"spec_names"`
+}
+
+type StoredProbeResult struct {
+	Type    string    `json:"type"`
+	Args    []string  `json:"args"`
+	Source  string    `json:"source"`
+	Status  string    `json:"status"`
+	Time    time.Time `json:"time"`
+	Elapsed int       `json:"elapsed"`
+	Comment string    `json:"comment"`
+}
+
+type StoredProbeSpecRule struct {
+	ID   string         `json:"id"`
+	Rule *ProbeSpecRule `json:"rule"`
+}
+
+type StoredProbeSpec struct {
+	ID   string     `json:"id"`
+	Spec *ProbeSpec `json:"spec"`
 }

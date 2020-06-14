@@ -1,5 +1,5 @@
 package dto
 
-type MyNames struct {
-	Names []string
+type MySources struct {
+	Sources []string
 }
