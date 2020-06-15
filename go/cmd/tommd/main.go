@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -17,6 +18,9 @@ import (
 func main() {
 
 	var bseURL = "http://localhost:7997"
+	if len(os.Args) > 1 {
+		bseURL = os.Args[1]
+	}
 	for {
 
 		var specs, err = getMyProbeSpecs(bseURL)
