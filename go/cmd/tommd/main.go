@@ -22,8 +22,8 @@ func main() {
 		bseURL = os.Args[1]
 	}
 	for {
-
 		var specs, err = getMyProbeSpecs(bseURL)
+		fmt.Printf("getMyProbeSpecs: err = %v\n", err)
 		if err != nil {
 			time.Sleep(5 * time.Second)
 			continue
@@ -34,9 +34,10 @@ func main() {
 
 		//	var _ = err
 		var _ = rv
-		fmt.Printf("%v\n", jsonIndent(rv))
+		fmt.Printf("probe results = %v\n", len(rv))
 		err = pushMyProbeResults(bseURL, rv)
-		fmt.Printf("%v\n", err)
+		fmt.Printf("pushMyProbeResults: err = %v\n", err)
+		fmt.Println("sleep 30 ...")
 		time.Sleep(30 * time.Second)
 	}
 
