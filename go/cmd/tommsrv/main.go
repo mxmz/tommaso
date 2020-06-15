@@ -23,13 +23,10 @@ type myContext struct {
 func setupContext(db *storage.FileDB) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			return next(&myContext{c, &storage.SimpleProbSpecStore{db}, &storage.VolatileProbResultStore{}})
+			return next(&myContext{c, &storage.SimpleProbSpecStore{DB: db}, &storage.VolatileProbResultStore{}})
 		}
 	}
 }
-
-func StoredProbeSpecFactory() interface{}     { return new(dto.StoredProbeSpec) }
-func StoredProbeSpecRuleFactory() interface{} { return new(dto.StoredProbeSpecRule) }
 
 func main() {
 
@@ -43,6 +40,7 @@ func main() {
 	dashboardAPI := e.Group("/api/dashboard")
 	dashboardAPI.Use(setupContext(db))
 	dashboardAPI.GET("/probe/results", getAllProbeResults)
+	dashboardAPI.GET("/probe/results/3dforce", getAllResults3DForceGraph)
 	dashboardAPI.GET("/probe/specs", listProbeSpecs)
 	dashboardAPI.PUT("/probe/specs/:id", putProbeSpec)
 	dashboardAPI.DELETE("/probe/specs/:id", deleteProbeSpec)
@@ -54,7 +52,15 @@ func main() {
 			Skipper: middleware.DefaultSkipper,
 			Index:   "index.html",
 			HTML5:   true,
-			Root:    "./dist",
+			Root:    "./dist-ng",
+		}))
+	agent := e.Group("/agent")
+	agent.Use(middleware.StaticWithConfig(
+		middleware.StaticConfig{
+			Skipper: middleware.DefaultSkipper,
+			Index:   "index.html",
+			HTML5:   false,
+			Root:    "./dist-agent",
 		}))
 
 	// Start server
@@ -94,6 +100,31 @@ func pushMyProbeResults(c echo.Context) error {
 func getAllProbeResults(c echo.Context) error {
 	var ctx = c.(*myContext)
 	var err error
+	res, err := ctx.probeResultStore.GetResultsBySourcePrefix(ctx.Context.Request().Context(), "")
+	if err != nil {
+		return err
+	}
+	c.JSON(200, res)
+	return nil
+}
+
+type Node struct {
+	ID    string `json:"id"`
+	Group string `json:"group"`
+}
+
+type Link struct {
+	Source  string `json:"source"`
+	Target  string `json:"target"`
+	Status  string `json:"status"`
+	Elapsed int    `json:"elapsed"`
+	Port    string `json:"port"`
+	Comment string `json:"comment"`
+}
+
+func getAllResults3DForceGraph(c echo.Context) error {
+	var ctx = c.(*myContext)
+	var err error
 	var myResults []*dto.ProbeResult
 	if err = c.Bind(&myResults); err != nil {
 		return err
@@ -102,7 +133,44 @@ func getAllProbeResults(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	c.JSON(200, res)
+	var nodes = make([]Node, 0, 500)
+	var links = make([]Link, 0, 500)
+
+	var nodeMap = map[string]*Node{}
+
+	for _, r := range res {
+		if r.Type != "tcp" || len(r.Args) < 2 {
+			continue
+		}
+		var source = r.Source
+		var target = r.Args[0]
+		var port = r.Args[1]
+
+		if v, ok := nodeMap[source]; ok {
+			if v.Group == "target" {
+				v.Group = "source+target"
+			}
+		} else {
+			nodeMap[source] = &Node{ID: source, Group: "source"}
+		}
+		if v, ok := nodeMap[target]; ok {
+			if v.Group == "source" {
+				v.Group = "source+target"
+			}
+		} else {
+			nodeMap[target] = &Node{ID: target, Group: "target"}
+		}
+		links = append(links, Link{Source: source, Target: target, Status: r.Status, Elapsed: r.Elapsed, Port: port, Comment: r.Comment})
+	}
+
+	for _, v := range nodeMap {
+		nodes = append(nodes, *v)
+	}
+
+	c.JSON(200, map[string]interface{}{
+		"nodes": nodes,
+		"links": links,
+	})
 	return nil
 }
 
@@ -176,7 +244,7 @@ func deleteProbeSpecRule(c echo.Context) error {
 	var ctx = c.(*myContext)
 	var id = c.Param("id")
 	var err error
-	err = ctx.probeSpecStore.PutStoredProbeSpec(ctx.Context.Request().Context(), id, nil)
+	err = ctx.probeSpecStore.PutStoredProbeSpecRule(ctx.Context.Request().Context(), id, nil)
 	if err != nil {
 		return err
 	}

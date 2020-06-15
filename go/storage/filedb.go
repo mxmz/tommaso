@@ -97,6 +97,9 @@ func (s *SimpleProbSpecStore) GetProbeSpecsForNames(ctx context.Context, names *
 		if err != nil {
 			return nil, err
 		}
+		if v.Rule.Disabled {
+			continue
+		}
 
 		for _, s := range names.Sources {
 			if regex.MatchString(s) {
@@ -109,6 +112,9 @@ func (s *SimpleProbSpecStore) GetProbeSpecsForNames(ctx context.Context, names *
 	var specs = []*dto.ProbeSpec{}
 	err = s.DB.VisitAll("specs", StoredProbeSpecFactory, func(o interface{}) {
 		var o1 = o.(*dto.StoredProbeSpec)
+		if o1.Spec.Disabled {
+			return
+		}
 		if _, ok := specNames[o1.ID]; ok {
 			specs = append(specs, o1.Spec)
 		}

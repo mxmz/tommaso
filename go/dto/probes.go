@@ -12,13 +12,15 @@ type ProbeResult struct {
 }
 
 type ProbeSpec struct {
-	Type    string   `json:"type"`
-	Args    []string `json:"args"`
-	Timeout int      `json:"timeout"`
+	Type     string   `json:"type"`
+	Args     []string `json:"args"`
+	Timeout  int      `json:"timeout"`
+	Disabled bool     `json:"disabled"`
 }
 type ProbeSpecRule struct {
 	Pattern   string   `json:"pattern"`
 	SpecNames []string `json:"spec_names"`
+	Disabled  bool     `json:"disabled"`
 }
 
 type StoredProbeResult struct {

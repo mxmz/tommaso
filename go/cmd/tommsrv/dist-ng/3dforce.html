@@ -1,0 +1,63 @@
+<head>
+    <style> body { margin: 0; } </style>
+    <script src="//unpkg.com/three"></script>
+    <script src="//unpkg.com/three-spritetext"></script>
+  
+    <script src="//unpkg.com/3d-force-graph"></script>
+
+    <!--<script src="../../dist/3d-force-graph.js"></script>-->
+  </head>
+  
+  <body>
+    <div id="3d-graph"></div>
+  
+    <script>
+      const Graph = ForceGraph3D()
+        (document.getElementById('3d-graph'))
+        .jsonUrl('/api/dashboard/probe/results/3dforce')
+        .nodeLabel('id')
+        .nodeAutoColorBy('group')
+        // .linkDirectionalParticles("value")
+         //.linkDirectionalParticleSpeed(d => d.value*0.01)
+        .linkDirectionalArrowLength(3)
+        .linkDirectionalArrowRelPos(1)
+        .linkCurvature(d => {
+            if ( d.status === "FAIL" ) return 0.1;
+            else return -0.1;
+        })
+        .linkWidth(1)
+        //.linkLabel( d => d.status + " → " + d.port )
+        .linkDirectionalParticles(1)
+        .linkDirectionalParticleSpeed(
+            d => {
+            if ( d.status === "FAIL" ) return 0;
+            else return 0.02;
+        }
+        )
+        .linkColor( d => {
+            if ( d.status == "FAIL" ) return "red";
+            else return "green";
+        })
+        .linkThreeObjectExtend(true)
+        .linkThreeObject(link => {
+          // extend link with text sprite
+          const sprite = new SpriteText(`→${link.target}:${link.port} ${link.comment}`);
+          sprite.color = 'lightgrey';
+          sprite.textHeight = 1;
+          return sprite;
+        })
+        .linkPositionUpdate((sprite, { start, end }) => {
+          const middlePos = Object.assign(...['x', 'y', 'z'].map(c => ({
+            [c]: start[c] + (end[c] - start[c]) / 2 // calc middle point
+          })));
+
+          // Position sprite
+          Object.assign(sprite.position, middlePos);
+        })
+        .onNodeDragEnd(node => {
+        node.fx = node.x;
+        node.fy = node.y;
+        node.fz = node.z;
+        });
+    </script>
+  </body>
