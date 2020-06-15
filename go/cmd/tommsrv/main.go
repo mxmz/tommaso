@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"mxmz.it/mxmz/tommaso/dto"
 	"mxmz.it/mxmz/tommaso/ports"
 	"mxmz.it/mxmz/tommaso/storage"
@@ -48,6 +49,15 @@ func main() {
 	dashboardAPI.GET("/probe/rules", listProbeSpecRules)
 	dashboardAPI.PUT("/probe/rules/:id", putProbeSpecRule)
 	dashboardAPI.DELETE("/probe/rules/:id", deleteProbeSpecRule)
+	e.Use(middleware.StaticWithConfig(
+		middleware.StaticConfig{
+			Skipper: middleware.DefaultSkipper,
+			Index:   "index.html",
+			HTML5:   true,
+			Root:    "./dist",
+		}))
+
+	// Start server
 
 	e.Logger.Fatal(e.Start(":7997"))
 }
