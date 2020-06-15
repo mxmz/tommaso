@@ -2,3 +2,11 @@ go/cmd/tommd/tommd
 go/cmd/tommsrv/.temp.db
 go/cmd/*/__debug_bin
 **/node_modules
+go/cmd/tommsrv/dist-ng/main-*
+go/cmd/tommsrv/dist-ng/polyfills-*
+go/cmd/tommsrv/dist-ng/runtime-*
+go/cmd/tommsrv/dist-ng/styles-*
+go/cmd/tommsrv/dist-ng/vendor-*
+go/cmd/tommsrv/dist-ng/index.html
+go/cmd/tommsrv/dist-ng/favicon.ico
+go/cmd/tommsrv/dist-agent
