@@ -26,34 +26,35 @@
             else return -0.1;
         })
         .linkWidth(1)
-        //.linkLabel( d => d.status + " → " + d.port )
-        .linkDirectionalParticles(1)
-        .linkDirectionalParticleSpeed(
-            d => {
-            if ( d.status === "FAIL" ) return 0;
-            else return 0.02;
-        }
-        )
+        .linkLabel( d => `${d.source.id}→${d.target.id}:${d.port} ${d.comment} (${d.elapsed}ms)` )
+        .linkHoverPrecision(130)
+        //.linkDirectionalParticles(1)
+        // .linkDirectionalParticleSpeed(
+        //     d => {
+        //     if ( d.status === "FAIL" ) return 0;
+        //     else return 0.02;
+        // }
+        // )
         .linkColor( d => {
             if ( d.status == "FAIL" ) return "red";
             else return "green";
         })
-        .linkThreeObjectExtend(true)
-        .linkThreeObject(link => {
-          // extend link with text sprite
-          const sprite = new SpriteText(`→${link.target}:${link.port} ${link.comment}`);
-          sprite.color = 'lightgrey';
-          sprite.textHeight = 1;
-          return sprite;
-        })
-        .linkPositionUpdate((sprite, { start, end }) => {
-          const middlePos = Object.assign(...['x', 'y', 'z'].map(c => ({
-            [c]: start[c] + (end[c] - start[c]) / 2 // calc middle point
-          })));
+        // .linkThreeObjectExtend(true)
+        // .linkThreeObject(link => {
+        //   // extend link with text sprite
+        //   const sprite = new SpriteText(`→${link.target}:${link.port} ${link.comment}`);
+        //   sprite.color = 'lightgrey';
+        //   sprite.textHeight = 1;
+        //   return sprite;
+        // })
+        // .linkPositionUpdate((sprite, { start, end }) => {
+        //   const middlePos = Object.assign(...['x', 'y', 'z'].map(c => ({
+        //     [c]: start[c] + (end[c] - start[c]) / 2 // calc middle point
+        //   })));
 
-          // Position sprite
-          Object.assign(sprite.position, middlePos);
-        })
+        //   // Position sprite
+        //   Object.assign(sprite.position, middlePos);
+        // })
         .onNodeDragEnd(node => {
         node.fx = node.x;
         node.fy = node.y;
