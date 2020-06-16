@@ -63,6 +63,15 @@ func main() {
 			Root:    "./dist-agent",
 		}))
 
+	threedforce := e.Group("/3dforce")
+	threedforce.Use(middleware.StaticWithConfig(
+		middleware.StaticConfig{
+			Skipper: middleware.DefaultSkipper,
+			Index:   "index.html",
+			HTML5:   false,
+			Root:    "./3dforce",
+		}))
+
 	// Start server
 
 	e.Logger.Fatal(e.Start(":7997"))
