@@ -10,7 +10,13 @@
             "reAttach": true,
             "name": "Launch localhost",
             "url": "http://localhost:4301/index.html",
-            "webRoot": "${workspaceFolder}/ng/tommaso"
+            "webRoot": "${workspaceFolder}/ng/tommaso",
+            "pathMappings": [
+                {
+                    "url": "webpack:///src",
+                    "path": "${workspaceFolder}/tommaso/src"
+                }
+            ]
         }
     ]
 }
