@@ -19,4 +19,5 @@ type ProbeSpecStore interface {
 type ProbeResultStore interface {
 	PutResultsForSources(ctx context.Context, results []*dto.ProbeResult) error
 	GetResultsBySourcePrefix(ctx context.Context, sourcePrefix string) ([]*dto.StoredProbeResult, error)
+	GetResultsWithSubstring(ctx context.Context, substr string) ([]*dto.StoredProbeResult, error)
 }

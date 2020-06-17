@@ -199,3 +199,24 @@ func (s *VolatileProbResultStore) GetResultsBySourcePrefix(ctx context.Context, 
 	defer volatileResultsLock.RUnlock()
 	return rv, nil
 }
+
+func (s *VolatileProbResultStore) GetResultsWithSubstring(ctx context.Context, substr string) ([]*dto.StoredProbeResult, error) {
+	if substr == "" {
+		return s.GetResultsBySourcePrefix(ctx, "")
+	}
+	var rv = []*dto.StoredProbeResult{}
+	volatileResultsLock.RLock()
+	for k, v := range volatileResults {
+		if strings.Contains(k, substr) {
+			rv = append(rv, v...)
+		} else {
+			for _, l := range v {
+				if len(l.Args) > 0 && strings.Contains(l.Args[0], substr) {
+					rv = append(rv, l)
+				}
+			}
+		}
+	}
+	defer volatileResultsLock.RUnlock()
+	return rv, nil
+}

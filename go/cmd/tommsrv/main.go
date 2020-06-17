@@ -109,7 +109,8 @@ func pushMyProbeResults(c echo.Context) error {
 func getAllProbeResults(c echo.Context) error {
 	var ctx = c.(*myContext)
 	var err error
-	res, err := ctx.probeResultStore.GetResultsBySourcePrefix(ctx.Context.Request().Context(), "")
+	var filter = c.Param("filter")
+	res, err := ctx.probeResultStore.GetResultsWithSubstring(ctx.Context.Request().Context(), filter)
 	if err != nil {
 		return err
 	}
@@ -134,11 +135,8 @@ type Link struct {
 func getAllResults3DForceGraph(c echo.Context) error {
 	var ctx = c.(*myContext)
 	var err error
-	var myResults []*dto.ProbeResult
-	if err = c.Bind(&myResults); err != nil {
-		return err
-	}
-	res, err := ctx.probeResultStore.GetResultsBySourcePrefix(ctx.Context.Request().Context(), "")
+	var filter = c.QueryParam("filter")
+	res, err := ctx.probeResultStore.GetResultsWithSubstring(ctx.Context.Request().Context(), filter)
 	if err != nil {
 		return err
 	}
