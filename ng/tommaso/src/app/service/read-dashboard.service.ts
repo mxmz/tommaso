@@ -9,9 +9,9 @@ import { StoredProbeResults } from '../model/stored-probe-results';
 export class ReadDashboardService {
 
   constructor(private http: HttpClient,) { }
-  
 
-  getAllResults(): Observable<StoredProbeResults[]> {
-    return this.http.get<StoredProbeResults[]>('/api/dashboard/probe/results');
+
+  getAllResults(filter: string): Observable<StoredProbeResults[]> {
+    return this.http.get<StoredProbeResults[]>('/api/dashboard/probe/results', { params: { filter: filter } });
   }
 }

@@ -1,10 +1,11 @@
+<mat-progress-bar mode="indeterminate" *ngIf="loading>0"></mat-progress-bar>
 
 <mat-form-field>
   <mat-label>Filter</mat-label>
-  <input matInput (keyup)="applyFilter($event)" placeholder="Ex. Mia">
+  <input matInput (keyup)="setFilter($event)" placeholder="Ex. Mia" [value]='filter'>
 </mat-form-field>
 
-<a mat-raised-button [href]="'/3dforce/v1.html#' + data.filter" mat-button target="tommaso-3d-force-v1">
+<a mat-raised-button [href]="'/3dforce/v1.html?_=' + data.filter + '#' + data.filter" mat-button target="tommaso-3d-force-v1">
   <mat-icon>device_hub</mat-icon>
   3D graph
 </a>
@@ -41,7 +42,7 @@
   
       <ng-container matColumnDef="time">
         <th mat-header-cell *matHeaderCellDef> Last check </th>
-        <td mat-cell *matCellDef="let element"> {{element.time}} </td>
+        <td mat-cell *matCellDef="let element"> {{element.time | date :'short'}} </td>
       </ng-container>
   
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

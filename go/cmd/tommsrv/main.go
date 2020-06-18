@@ -109,7 +109,7 @@ func pushMyProbeResults(c echo.Context) error {
 func getAllProbeResults(c echo.Context) error {
 	var ctx = c.(*myContext)
 	var err error
-	var filter = c.Param("filter")
+	var filter = c.QueryParam("filter")
 	res, err := ctx.probeResultStore.GetResultsWithSubstring(ctx.Context.Request().Context(), filter)
 	if err != nil {
 		return err
