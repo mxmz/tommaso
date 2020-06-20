@@ -33,6 +33,7 @@ func main() {
 	var db = storage.DefaultFileDB()
 
 	e := echo.New()
+	e.Use(middleware.Logger())
 	agentAPI := e.Group("/api/agent")
 	agentAPI.Use(setupContext(db))
 	agentAPI.POST("/get-my-probe-specs", getMyProbeSpecs)
