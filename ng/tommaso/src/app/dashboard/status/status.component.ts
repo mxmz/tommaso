@@ -3,9 +3,10 @@ import { ReadDashboardService } from 'src/app/service/read-dashboard.service';
 import { StoredProbeResults } from 'src/app/model/stored-probe-results';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute, } from '@angular/router';
+import { ActivatedRoute, Router, } from '@angular/router';
 import { Location } from '@angular/common';
 import { timer } from 'rxjs';
+import { not } from '@angular/compiler/src/output/output_ast';
 
 
 @Component({
@@ -20,7 +21,7 @@ export class StatusComponent implements OnInit {
   loading = 0;
   filter = "";
   updated = new Date();
-  constructor(private svc: ReadDashboardService, private route: ActivatedRoute, private location: Location,) { }
+  constructor(private svc: ReadDashboardService, private route: ActivatedRoute, private location: Location, private r: Router) { }
 
   loadData() {
     this.loading++;
@@ -31,7 +32,7 @@ export class StatusComponent implements OnInit {
       this.data.filterPredicate = (data, filter) => data.source.includes(filter) || data.args[0].includes(filter);
       this.applyFilter();
       this.loading--;
-      this.location.go(`?filter=${filter}`);
+      //this.location.go(`?filter=${filter}`);
       this.updated = new Date();
     })
   }
@@ -50,13 +51,16 @@ export class StatusComponent implements OnInit {
     let filter = this.filter;
 
     const abc = source.subscribe(val => {
-      console.log(val, '-');
+      //console.log(val, '-');
       const now = new Date();
-      if (!this.loading && ((this.filter !== filter) || (now.getTime() - this.updated.getTime() > 60000))) {
-        filter = this.filter;
-        this.loadData();
+      if (!this.loading) {
+        if (this.filter !== filter) {
+          filter = this.filter;
+          this.r.navigate([], { queryParams: { filter: filter, } })
+        } else if (now.getTime() - this.updated.getTime() > 60000) {
+          this.loadData();
+        }
       }
-
     });
 
   }
