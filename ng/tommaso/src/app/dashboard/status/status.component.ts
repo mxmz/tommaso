@@ -15,10 +15,11 @@ import { timer } from 'rxjs';
 })
 export class StatusComponent implements OnInit {
   @ViewChild(MatSort, { static: true }) sort: MatSort;
-  displayedColumns: string[] = ['source', 'target', 'status', 'elapsed', 'comment', 'time'];
+  displayedColumns: string[] = ['source', 'target', 'description', 'status', 'elapsed', 'comment', 'time'];
   data = new MatTableDataSource<StoredProbeResults>([]);
   loading = 0;
   filter = "";
+  updated = new Date();
   constructor(private svc: ReadDashboardService, private route: ActivatedRoute, private location: Location,) { }
 
   loadData() {
@@ -31,6 +32,7 @@ export class StatusComponent implements OnInit {
       this.applyFilter();
       this.loading--;
       this.location.go(`?filter=${filter}`);
+      this.updated = new Date();
     })
   }
 
@@ -49,7 +51,8 @@ export class StatusComponent implements OnInit {
 
     const abc = source.subscribe(val => {
       console.log(val, '-');
-      if (!this.loading && this.filter !== filter) {
+      const now = new Date();
+      if (!this.loading && ((this.filter !== filter) || (now.getTime() - this.updated.getTime() > 60000))) {
         filter = this.filter;
         this.loadData();
       }
@@ -68,7 +71,7 @@ export class StatusComponent implements OnInit {
 
   applyFilter() {
     this.data.filter = this.filter
-    
+
   }
 
 }

@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"mxmz.it/mxmz/tommaso/dto"
 )
@@ -160,22 +161,29 @@ func (s *SimpleProbSpecStore) PutStoredProbeSpecRule(ctx context.Context, id str
 
 var volatileResultsLock sync.RWMutex
 var volatileResults = map[string][]*dto.StoredProbeResult{}
+var volatileUpdatedAt time.Time
 
 type VolatileProbResultStore struct {
 }
 
+func (s *VolatileProbResultStore) LastUpdateAt(ctx context.Context) time.Time {
+	volatileResultsLock.RLock()
+	defer volatileResultsLock.RUnlock()
+	return volatileUpdatedAt
+}
 func (s *VolatileProbResultStore) PutResultsForSources(ctx context.Context, results []*dto.ProbeResult) error {
 	var newResults = map[string][]*dto.StoredProbeResult{}
 	for _, r := range results {
 		for _, s := range r.Sources {
 			stored := dto.StoredProbeResult{
-				Source:  s,
-				Type:    r.Spec.Type,
-				Args:    r.Spec.Args,
-				Time:    r.Time,
-				Status:  r.Status,
-				Elapsed: r.Elapsed,
-				Comment: r.Comment,
+				Source:      s,
+				Type:        r.Spec.Type,
+				Args:        r.Spec.Args,
+				Time:        r.Time,
+				Status:      r.Status,
+				Elapsed:     r.Elapsed,
+				Comment:     r.Comment,
+				Description: r.Spec.Description,
 			}
 			newResults[s] = append(newResults[s], &stored)
 		}
@@ -185,6 +193,7 @@ func (s *VolatileProbResultStore) PutResultsForSources(ctx context.Context, resu
 	for k, v := range newResults {
 		volatileResults[k] = v
 	}
+	volatileUpdatedAt = time.Now()
 	defer volatileResultsLock.Unlock()
 	return nil
 }

@@ -6,4 +6,5 @@ export interface StoredProbeResults {
     time: string
     elapsed: number
     comment: string
+    description: string
 }

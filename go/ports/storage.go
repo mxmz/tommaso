@@ -2,6 +2,7 @@ package ports
 
 import (
 	"context"
+	"time"
 
 	"mxmz.it/mxmz/tommaso/dto"
 )
@@ -18,6 +19,7 @@ type ProbeSpecStore interface {
 
 type ProbeResultStore interface {
 	PutResultsForSources(ctx context.Context, results []*dto.ProbeResult) error
+	LastUpdateAt(ctx context.Context) time.Time
 	GetResultsBySourcePrefix(ctx context.Context, sourcePrefix string) ([]*dto.StoredProbeResult, error)
 	GetResultsWithSubstring(ctx context.Context, substr string) ([]*dto.StoredProbeResult, error)
 }
