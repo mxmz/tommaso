@@ -1,6 +1,6 @@
 # Tommaso
 
-A minimalist agent-based tool to continuously perform latency/connectivity tests and view results.
+A simple agent-based tool to continuously perform latency/connectivity tests and view results.
 
 
 ## IT'S WIP. DO NOT USE.
