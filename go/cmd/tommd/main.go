@@ -17,28 +17,30 @@ import (
 
 func main() {
 
-	var bseURL = "http://localhost:7997"
+	var baseURL = "http://localhost:7997"
 	if len(os.Args) > 1 {
-		bseURL = os.Args[1]
+		baseURL = os.Args[1]
 	}
+	var p = prober.NewProber()
+	var probed = 0
 	for {
-		var specs, err = getMyProbeSpecs(bseURL)
-		fmt.Printf("getMyProbeSpecs: err = %v\n", err)
+		var specs, err = getMyProbeSpecs(baseURL)
+		fmt.Printf("getMyProbeSpecs: %s: err = %v\n", baseURL, err)
 		if err != nil {
 			time.Sleep(5 * time.Second)
 			continue
 		}
-
-		var p = &prober.Prober{}
 		rv := p.RunProbSpecsConcurrent(specs)
-
 		//	var _ = err
 		var _ = rv
 		fmt.Printf("probe results = %v\n", len(rv))
-		err = pushMyProbeResults(bseURL, rv)
-		fmt.Printf("pushMyProbeResults: err = %v\n", err)
-		fmt.Println("sleep 30 ...")
-		time.Sleep(30 * time.Second)
+		if p.Probed != probed {
+			err = pushMyProbeResults(baseURL, rv)
+			fmt.Printf("pushMyProbeResults: err = %v\n", err)
+		}
+		probed = p.Probed
+		fmt.Println("sleep ...")
+		time.Sleep(5 * time.Second)
 	}
 
 }
