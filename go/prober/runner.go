@@ -6,7 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cloudflare/cfssl/log"
+	"log"
+
 	"mxmz.it/mxmz/tommaso/dto"
 	"mxmz.it/mxmz/tommaso/system"
 )
@@ -84,7 +85,7 @@ func (p *Prober) RunProbSpecsConcurrent(specs []*dto.ProbeSpec) []*dto.ProbeResu
 					var res = f(ifaces, spec)
 					rv[idx] = res
 					p.setCache(res)
-					log.Infof("probe %s %v = %s", spec.Type, spec.Args, res.Status)
+					log.Printf("probe %s %v = %s", spec.Type, spec.Args, res.Status)
 				} else {
 					rv[idx] = cached
 				}
