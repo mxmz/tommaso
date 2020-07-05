@@ -22,7 +22,7 @@ func main() {
 	if len(os.Args) > 1 {
 		baseURL = os.Args[1]
 	}
-	var p = NewCachedProbler()
+	var p = NewCachedProber()
 	var probed = 0
 	for {
 		var specs, err = getMyProbeSpecs(baseURL)
@@ -100,7 +100,7 @@ type CachedProber struct {
 	p      *prober.Prober
 }
 
-func NewCachedProbler() *CachedProber {
+func NewCachedProber() *CachedProber {
 	return &CachedProber{
 		cache: map[string]*dto.ProbeResult{},
 		p:     prober.NewProber(),
