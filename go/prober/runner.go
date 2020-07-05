@@ -2,7 +2,6 @@ package prober
 
 import (
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -12,48 +11,15 @@ import (
 	"mxmz.it/mxmz/tommaso/system"
 )
 
-var FailCacheTTL = 20 * time.Second
-var OKCacheTTL = 60 * time.Second
-
 var probers = map[string]func(ifaces []string, spec *dto.ProbeSpec) *dto.ProbeResult{
 	"tcp": tcpProbe,
 }
 
 type Prober struct {
-	cache  map[string]*dto.ProbeResult
-	lock   sync.RWMutex
-	Probed int
 }
 
 func NewProber() *Prober {
-	return &Prober{
-		cache: map[string]*dto.ProbeResult{},
-	}
-}
-
-func (p *Prober) cached(spec *dto.ProbeSpec) *dto.ProbeResult {
-	var k = spec.Type + strings.Join(spec.Args, ":")
-	p.lock.RLock()
-	defer p.lock.RUnlock()
-	var now = time.Now()
-	var v, ok = p.cache[k]
-	if ok {
-		if v.Status == "FAIL" && now.Sub(v.Time) < FailCacheTTL {
-			return v
-		}
-		if v.Status == "OK" && now.Sub(v.Time) < OKCacheTTL {
-			return v
-		}
-	}
-	return nil
-}
-func (p *Prober) setCache(res *dto.ProbeResult) {
-	var spec = res.Spec
-	var k = spec.Type + strings.Join(spec.Args, ":")
-	p.lock.Lock()
-	defer p.lock.Unlock()
-	p.cache[k] = res
-	p.Probed++
+	return &Prober{}
 }
 
 func (p *Prober) RunProbSpecs(specs []*dto.ProbeSpec) []*dto.ProbeResult {
@@ -80,15 +46,9 @@ func (p *Prober) RunProbSpecsConcurrent(specs []*dto.ProbeSpec) []*dto.ProbeResu
 			wg.Add(1)
 			var spec = s
 			go func() {
-				var cached = p.cached(spec)
-				if cached == nil {
-					var res = f(ifaces, spec)
-					rv[idx] = res
-					p.setCache(res)
-					log.Printf("probe %s %v = %s", spec.Type, spec.Args, res.Status)
-				} else {
-					rv[idx] = cached
-				}
+				var res = f(ifaces, spec)
+				rv[idx] = res
+				log.Printf("probe %s %v = %s", spec.Type, spec.Args, res.Status)
 				wg.Done()
 
 			}()

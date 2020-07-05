@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"mxmz.it/mxmz/tommaso/dto"
@@ -21,7 +22,7 @@ func main() {
 	if len(os.Args) > 1 {
 		baseURL = os.Args[1]
 	}
-	var p = prober.NewProber()
+	var p = NewCachedProbler()
 	var probed = 0
 	for {
 		var specs, err = getMyProbeSpecs(baseURL)
@@ -33,7 +34,7 @@ func main() {
 		rv := p.RunProbSpecsConcurrent(specs)
 		//	var _ = err
 		var _ = rv
-		fmt.Printf("probe results = %v\n", len(rv))
+		fmt.Printf("probe results = %v (%d)\n", len(rv), p.Probed)
 		if p.Probed != probed {
 			err = pushMyProbeResults(baseURL, rv)
 			fmt.Printf("pushMyProbeResults: err = %v\n", err)
@@ -90,4 +91,65 @@ func pushMyProbeResults(baseURL string, results []*dto.ProbeResult) error {
 
 	return nil
 
+}
+
+type CachedProber struct {
+	cache  map[string]*dto.ProbeResult
+	lock   sync.RWMutex
+	Probed int
+	p      *prober.Prober
+}
+
+func NewCachedProbler() *CachedProber {
+	return &CachedProber{
+		cache: map[string]*dto.ProbeResult{},
+		p:     prober.NewProber(),
+	}
+}
+
+var FailCacheTTL = 20 * time.Second
+var OKCacheTTL = 3 * 60 * time.Second
+
+func (p *CachedProber) cached(spec *dto.ProbeSpec) *dto.ProbeResult {
+	var k = spec.Type + strings.Join(spec.Args, ":")
+	p.lock.RLock()
+	defer p.lock.RUnlock()
+	var now = time.Now()
+	var v, ok = p.cache[k]
+	if ok {
+		if v.Status == "FAIL" && now.Sub(v.Time) < FailCacheTTL {
+			return v
+		}
+		if v.Status == "OK" && now.Sub(v.Time) < OKCacheTTL {
+			return v
+		}
+	}
+	return nil
+}
+func (p *CachedProber) setCache(res *dto.ProbeResult) {
+	var spec = res.Spec
+	var k = spec.Type + strings.Join(spec.Args, ":")
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	p.cache[k] = res
+}
+
+func (p *CachedProber) RunProbSpecsConcurrent(specs []*dto.ProbeSpec) []*dto.ProbeResult {
+	var rv = make([]*dto.ProbeResult, 0, len(specs))
+	var toprobe = make([]*dto.ProbeSpec, 0, len(specs))
+
+	for _, s := range specs {
+		if cached := p.cached(s); cached != nil {
+			rv = append(rv, cached)
+		} else {
+			toprobe = append(toprobe, s)
+			p.Probed++
+		}
+	}
+	for _, r := range p.p.RunProbSpecsConcurrent(toprobe) {
+		p.setCache(r)
+		rv = append(rv, r)
+	}
+
+	return rv
 }
