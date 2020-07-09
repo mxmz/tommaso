@@ -87,12 +87,13 @@ type SimpleProbSpecStore struct {
 	DB *FileDB
 }
 
-func (s *SimpleProbSpecStore) GetProbeSpecsForNames(ctx context.Context, names *dto.MySources) ([]*dto.ProbeSpec, error) {
+func (s *SimpleProbSpecStore) GetProbeTestingSpecsForNames(ctx context.Context, names *dto.MySources) ([]*dto.ProbeTestingSpec, error) {
 	rules, err := s.GetStoredProbeSpecRules(ctx)
 	if err != nil {
 		return nil, err
 	}
 	var specNames = map[string]struct{}{}
+	var specNamesNot = map[string]struct{}{}
 	for _, v := range rules {
 		var regex, err = regexp.Compile(v.Rule.Pattern)
 		if err != nil {
@@ -105,19 +106,43 @@ func (s *SimpleProbSpecStore) GetProbeSpecsForNames(ctx context.Context, names *
 		for _, s := range names.Sources {
 			if regex.MatchString(s) {
 				for _, n := range v.Rule.SpecNames {
-					specNames[n] = struct{}{}
+					if len(n) > 0 {
+						if n[0] == '!' {
+							specNamesNot[n[1:]] = struct{}{}
+						} else {
+							specNames[n] = struct{}{}
+						}
+					}
 				}
 			}
 		}
 	}
-	var specs = []*dto.ProbeSpec{}
+	var specs = []*dto.ProbeTestingSpec{}
 	err = s.DB.VisitAll("specs", StoredProbeSpecFactory, func(o interface{}) {
 		var o1 = o.(*dto.StoredProbeSpec)
 		if o1.Spec.Disabled {
 			return
 		}
 		if _, ok := specNames[o1.ID]; ok {
-			specs = append(specs, o1.Spec)
+			specs = append(specs,
+				&dto.ProbeTestingSpec{
+					Type:          o1.Spec.Type,
+					Args:          o1.Spec.Args,
+					Timeout:       o1.Spec.Timeout,
+					Description:   o1.Spec.Description,
+					ExpectFailure: false,
+				},
+			)
+		} else if _, ok := specNamesNot[o1.ID]; ok {
+			specs = append(specs,
+				&dto.ProbeTestingSpec{
+					Type:          o1.Spec.Type,
+					Args:          o1.Spec.Args,
+					Timeout:       o1.Spec.Timeout,
+					Description:   o1.Spec.Description + " (!)",
+					ExpectFailure: true,
+				},
+			)
 		}
 	})
 
@@ -176,14 +201,16 @@ func (s *VolatileProbResultStore) PutResultsForSources(ctx context.Context, resu
 	for _, r := range results {
 		for _, s := range r.Sources {
 			stored := dto.StoredProbeResult{
-				Source:      s,
-				Type:        r.Spec.Type,
-				Args:        r.Spec.Args,
-				Time:        r.Time,
-				Status:      r.Status,
-				Elapsed:     r.Elapsed,
-				Comment:     r.Comment,
-				Description: r.Spec.Description,
+				Source:        s,
+				Type:          r.Spec.Type,
+				Args:          r.Spec.Args,
+				Time:          r.Time,
+				Status:        r.Status,
+				Elapsed:       r.Elapsed,
+				Comment:       r.Comment,
+				Description:   r.Spec.Description,
+				ExpectFailure: r.Spec.ExpectFailure,
+				Pass:          (r.Status == "OK" && !r.Spec.ExpectFailure) || (r.Status != "OK" && r.Spec.ExpectFailure),
 			}
 			newResults[s] = append(newResults[s], &stored)
 		}

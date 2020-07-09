@@ -85,7 +85,7 @@ func getMyProbeSpecs(c echo.Context) error {
 	if err = c.Bind(&mySrcs); err != nil {
 		return err
 	}
-	probSpecs, err := ctx.probeSpecStore.GetProbeSpecsForNames(ctx.Context.Request().Context(), &mySrcs)
+	probSpecs, err := ctx.probeSpecStore.GetProbeTestingSpecsForNames(ctx.Context.Request().Context(), &mySrcs)
 	if err != nil {
 		return err
 	}

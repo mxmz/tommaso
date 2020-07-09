@@ -11,7 +11,7 @@ import (
 	"mxmz.it/mxmz/tommaso/system"
 )
 
-var probers = map[string]func(ifaces []string, spec *dto.ProbeSpec) *dto.ProbeResult{
+var probers = map[string]func(ifaces []string, spec *dto.ProbeTestingSpec) *dto.ProbeResult{
 	"tcp": tcpProbe,
 }
 
@@ -22,7 +22,7 @@ func NewProber() *Prober {
 	return &Prober{}
 }
 
-func (p *Prober) RunProbSpecs(specs []*dto.ProbeSpec) []*dto.ProbeResult {
+func (p *Prober) RunProbSpecs(specs []*dto.ProbeTestingSpec) []*dto.ProbeResult {
 	ifaces := system.GetNetInterfaceAddresses()
 	var rv = []*dto.ProbeResult{}
 	for _, s := range specs {
@@ -35,7 +35,7 @@ func (p *Prober) RunProbSpecs(specs []*dto.ProbeSpec) []*dto.ProbeResult {
 	return rv
 }
 
-func (p *Prober) RunProbSpecsConcurrent(specs []*dto.ProbeSpec) []*dto.ProbeResult {
+func (p *Prober) RunProbSpecsConcurrent(specs []*dto.ProbeTestingSpec) []*dto.ProbeResult {
 	ifaces := system.GetNetInterfaceAddresses()
 	var wg = sync.WaitGroup{}
 	var rv = make([]*dto.ProbeResult, len(specs))
@@ -48,7 +48,11 @@ func (p *Prober) RunProbSpecsConcurrent(specs []*dto.ProbeSpec) []*dto.ProbeResu
 			go func() {
 				var res = f(ifaces, spec)
 				rv[idx] = res
-				log.Printf("probe %s %v = %s", spec.Type, spec.Args, res.Status)
+				var expected = "OK"
+				if spec.ExpectFailure {
+					expected = "FAIL"
+				}
+				log.Printf("probe %s %v = %s (wants %v)", spec.Type, spec.Args, res.Status, expected)
 				wg.Done()
 
 			}()
@@ -58,7 +62,7 @@ func (p *Prober) RunProbSpecsConcurrent(specs []*dto.ProbeSpec) []*dto.ProbeResu
 	return rv
 }
 
-func tcpProbe(ifaces []string, spec *dto.ProbeSpec) *dto.ProbeResult {
+func tcpProbe(ifaces []string, spec *dto.ProbeTestingSpec) *dto.ProbeResult {
 	tm := time.Now()
 	if spec.Args == nil || len(spec.Args) < 2 {
 		return &dto.ProbeResult{

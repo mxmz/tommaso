@@ -7,4 +7,6 @@ export interface StoredProbeResults {
     elapsed: number
     comment: string
     description: string
+    expect_failure: boolean
+    pass: boolean
 }

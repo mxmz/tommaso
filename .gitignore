@@ -10,3 +10,4 @@ go/cmd/tommsrv/dist-ng/vendor-*
 go/cmd/tommsrv/dist-ng/index.html
 go/cmd/tommsrv/dist-ng/favicon.ico
 go/cmd/tommsrv/dist-agent
+go/cmd/tommsrv/tommsrv

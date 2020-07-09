@@ -8,7 +8,7 @@ import (
 )
 
 type ProbeSpecStore interface {
-	GetProbeSpecsForNames(ctx context.Context, names *dto.MySources) ([]*dto.ProbeSpec, error)
+	GetProbeTestingSpecsForNames(ctx context.Context, names *dto.MySources) ([]*dto.ProbeTestingSpec, error)
 
 	GetStoredProbeSpecs(ctx context.Context) ([]*dto.StoredProbeSpec, error)
 	PutStoredProbeSpec(ctx context.Context, id string, data *dto.ProbeSpec) error

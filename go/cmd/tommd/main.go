@@ -25,7 +25,7 @@ func main() {
 	var p = NewCachedProber()
 	var probed = 0
 	for {
-		var specs, err = getMyProbeSpecs(baseURL)
+		var specs, err = getMyProbeTestingSpecs(baseURL)
 		fmt.Printf("getMyProbeSpecs: %s: err = %v\n", baseURL, err)
 		if err != nil {
 			time.Sleep(5 * time.Second)
@@ -51,7 +51,7 @@ func jsonIndent(v interface{}) string {
 	return string(b)
 }
 
-func getMyProbeSpecs(baseURL string) ([]*dto.ProbeSpec, error) {
+func getMyProbeTestingSpecs(baseURL string) ([]*dto.ProbeTestingSpec, error) {
 
 	var ifaces = system.GetNetInterfaceAddresses()
 	var body = dto.MySources{
@@ -67,7 +67,7 @@ func getMyProbeSpecs(baseURL string) ([]*dto.ProbeSpec, error) {
 	if err != nil {
 		return nil, err
 	}
-	var probeSpecs []*dto.ProbeSpec
+	var probeSpecs []*dto.ProbeTestingSpec
 	err = json.Unmarshal(resBody, &probeSpecs)
 	if err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func NewCachedProber() *CachedProber {
 var FailCacheTTL = 20 * time.Second
 var OKCacheTTL = 3 * 60 * time.Second
 
-func (p *CachedProber) cached(spec *dto.ProbeSpec) *dto.ProbeResult {
+func (p *CachedProber) cached(spec *dto.ProbeTestingSpec) *dto.ProbeResult {
 	var k = spec.Type + strings.Join(spec.Args, ":")
 	p.lock.RLock()
 	defer p.lock.RUnlock()
@@ -134,9 +134,9 @@ func (p *CachedProber) setCache(res *dto.ProbeResult) {
 	p.cache[k] = res
 }
 
-func (p *CachedProber) RunProbSpecsConcurrent(specs []*dto.ProbeSpec) []*dto.ProbeResult {
+func (p *CachedProber) RunProbSpecsConcurrent(specs []*dto.ProbeTestingSpec) []*dto.ProbeResult {
 	var rv = make([]*dto.ProbeResult, 0, len(specs))
-	var toprobe = make([]*dto.ProbeSpec, 0, len(specs))
+	var toprobe = make([]*dto.ProbeTestingSpec, 0, len(specs))
 
 	for _, s := range specs {
 		if cached := p.cached(s); cached != nil {
