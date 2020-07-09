@@ -28,9 +28,8 @@
       <th mat-header-cell *matHeaderCellDef > Description </th>
       <td mat-cell *matCellDef="let element"> {{element.description}}</td>
     </ng-container>
-
-    <ng-container matColumnDef="status">
-      <th mat-header-cell *matHeaderCellDef> Status </th>
+    <ng-container matColumnDef="passed">
+      <th mat-header-cell *matHeaderCellDef> Passed </th>
       <td mat-cell *matCellDef="let element" >
         <span *ngIf="element.pass" [style.color]="'green' ">
           <mat-icon [inline]="true">check_circle</mat-icon>
@@ -38,8 +37,14 @@
         <span *ngIf="!element.pass" [style.color]="'red' ">
           <mat-icon [inline]="true">error</mat-icon>
         </span>
+      </td>
+    </ng-container>  
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef> Status </th>
+      <td mat-cell *matCellDef="let element" >
         &nbsp;
-        <b>{{element.status}}</b></td>
+        <b>{{element.status}}</b><span *ngIf="element.expect_failure"> (FAIL is expected)</span>
+      </td>
     </ng-container>
   
     <ng-container matColumnDef="elapsed">

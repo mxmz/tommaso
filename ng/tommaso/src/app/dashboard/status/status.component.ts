@@ -16,7 +16,7 @@ import { not } from '@angular/compiler/src/output/output_ast';
 })
 export class StatusComponent implements OnInit {
   @ViewChild(MatSort, { static: true }) sort: MatSort;
-  displayedColumns: string[] = ['source', 'target', 'description', 'status', 'elapsed', 'comment', 'time'];
+  displayedColumns: string[] = ['source', 'target', 'description', 'passed', 'status', 'elapsed', 'comment', 'time'];
   data = new MatTableDataSource<StoredProbeResults>([]);
   loading = 0;
   filter = "";
