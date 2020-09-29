@@ -8,10 +8,9 @@ import (
 	"path"
 	"regexp"
 	"strings"
-	"sync"
-	"time"
 
 	"mxmz.it/mxmz/tommaso/dto"
+	"mxmz.it/mxmz/tommaso/ports"
 )
 
 type objectFactory func() interface{}
@@ -82,6 +81,8 @@ func DefaultFileDB() *FileDB {
 		basePath: "./.temp.db",
 	}
 }
+
+var _ ports.ProbeSpecStore = (*SimpleProbSpecStore)(nil)
 
 type SimpleProbSpecStore struct {
 	DB *FileDB
@@ -182,77 +183,4 @@ func (s *SimpleProbSpecStore) PutStoredProbeSpecRule(ctx context.Context, id str
 		return s.DB.Save("rules", id, nil)
 	}
 	return s.DB.Save("rules", id, &dto.StoredProbeSpecRule{ID: id, Rule: data})
-}
-
-var volatileResultsLock sync.RWMutex
-var volatileResults = map[string][]*dto.StoredProbeResult{}
-var volatileUpdatedAt time.Time
-
-type VolatileProbResultStore struct {
-}
-
-func (s *VolatileProbResultStore) LastUpdateAt(ctx context.Context) time.Time {
-	volatileResultsLock.RLock()
-	defer volatileResultsLock.RUnlock()
-	return volatileUpdatedAt
-}
-func (s *VolatileProbResultStore) PutResultsForSources(ctx context.Context, results []*dto.ProbeResult) error {
-	var newResults = map[string][]*dto.StoredProbeResult{}
-	for _, r := range results {
-		for _, s := range r.Sources {
-			stored := dto.StoredProbeResult{
-				Source:        s,
-				Type:          r.Spec.Type,
-				Args:          r.Spec.Args,
-				Time:          r.Time,
-				Status:        r.Status,
-				Elapsed:       r.Elapsed,
-				Comment:       r.Comment,
-				Description:   r.Spec.Description,
-				ExpectFailure: r.Spec.ExpectFailure,
-				Pass:          (r.Status == "OK" && !r.Spec.ExpectFailure) || (r.Status != "OK" && r.Spec.ExpectFailure),
-			}
-			newResults[s] = append(newResults[s], &stored)
-		}
-	}
-
-	volatileResultsLock.Lock()
-	for k, v := range newResults {
-		volatileResults[k] = v
-	}
-	volatileUpdatedAt = time.Now()
-	defer volatileResultsLock.Unlock()
-	return nil
-}
-func (s *VolatileProbResultStore) GetResultsBySourcePrefix(ctx context.Context, sourcePrefix string) ([]*dto.StoredProbeResult, error) {
-	var rv = []*dto.StoredProbeResult{}
-	volatileResultsLock.RLock()
-	for k, v := range volatileResults {
-		if strings.HasPrefix(k, sourcePrefix) {
-			rv = append(rv, v...)
-		}
-	}
-	defer volatileResultsLock.RUnlock()
-	return rv, nil
-}
-
-func (s *VolatileProbResultStore) GetResultsWithSubstring(ctx context.Context, substr string) ([]*dto.StoredProbeResult, error) {
-	if substr == "" {
-		return s.GetResultsBySourcePrefix(ctx, "")
-	}
-	var rv = []*dto.StoredProbeResult{}
-	volatileResultsLock.RLock()
-	for k, v := range volatileResults {
-		if strings.Contains(k, substr) {
-			rv = append(rv, v...)
-		} else {
-			for _, l := range v {
-				if len(l.Args) > 0 && strings.Contains(l.Args[0], substr) {
-					rv = append(rv, l)
-				}
-			}
-		}
-	}
-	defer volatileResultsLock.RUnlock()
-	return rv, nil
 }
