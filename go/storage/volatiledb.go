@@ -28,7 +28,7 @@ func (s *VolatileProbResultStore) LastUpdateAt(ctx context.Context) time.Time {
 func (s *VolatileProbResultStore) PutResultsForSources(ctx context.Context, results []*dto.ProbeResult) error {
 	var newResults = map[string][]*dto.StoredProbeResult{}
 	for _, r := range results {
-		s := strings.Join(r.Sources, ",")
+		s := strings.Join(r.Sources, " ")
 		stored := dto.StoredProbeResult{
 			Source:        s,
 			Type:          r.Spec.Type,
