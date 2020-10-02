@@ -53,7 +53,7 @@ func (s *VolatileProbResultStore) PutResultsForSources(ctx context.Context, resu
 	return nil
 }
 
-var recordTTL = 10 * time.Minute
+var recordTTL = 8 * time.Hour
 
 func areAllOlder(l []*dto.StoredProbeResult, refTime time.Time) bool {
 	for _, v := range l {
