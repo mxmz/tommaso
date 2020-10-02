@@ -25,8 +25,11 @@ func GetNetInterfaceAddresses() []string {
 			continue
 		}
 		for _, a := range addrs {
-			if !strings.Contains(a.String(), ":") {
-				addr := a.String()
+			addr := a.String()
+			if !strings.Contains(addr, ":") {
+				if strings.HasPrefix(addr, "127.") || strings.HasPrefix(addr, "169.254.") {
+					continue
+				}
 				rv = append(rv, addr[:strings.Index(addr, "/")])
 			}
 		}
