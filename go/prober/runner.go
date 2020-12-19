@@ -8,7 +8,6 @@ import (
 	"log"
 
 	"mxmz.it/mxmz/tommaso/dto"
-	"mxmz.it/mxmz/tommaso/system"
 )
 
 var probers = map[string]func(ifaces []string, spec *dto.ProbeTestingSpec) *dto.ProbeResult{
@@ -22,8 +21,7 @@ func NewProber() *Prober {
 	return &Prober{}
 }
 
-func (p *Prober) RunProbSpecs(specs []*dto.ProbeTestingSpec) []*dto.ProbeResult {
-	ifaces := system.GetNetInterfaceAddresses()
+func (p *Prober) RunProbSpecs(ifaces []string, specs []*dto.ProbeTestingSpec) []*dto.ProbeResult {
 	var rv = []*dto.ProbeResult{}
 	for _, s := range specs {
 		f, ok := probers[s.Type]
@@ -35,8 +33,7 @@ func (p *Prober) RunProbSpecs(specs []*dto.ProbeTestingSpec) []*dto.ProbeResult 
 	return rv
 }
 
-func (p *Prober) RunProbSpecsConcurrent(specs []*dto.ProbeTestingSpec) []*dto.ProbeResult {
-	ifaces := system.GetNetInterfaceAddresses()
+func (p *Prober) RunProbSpecsConcurrent(ifaces []string, specs []*dto.ProbeTestingSpec) []*dto.ProbeResult {
 	var wg = sync.WaitGroup{}
 	var rv = make([]*dto.ProbeResult, len(specs))
 	for i, s := range specs {

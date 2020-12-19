@@ -27,19 +27,27 @@ func setupContext(db *storage.FileDB) echo.MiddlewareFunc {
 		}
 	}
 }
+func setupContext2(db *storage.MemProbeSpecDB) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			return next(&myContext{c, storage.NewSyncMemProbeSpecDB(db), &storage.VolatileProbResultStore{}})
+		}
+	}
+}
 
 func main() {
 
-	var db = storage.DefaultFileDB()
+	//	var db = storage.DefaultFileDB()
+	var db2 = storage.NewMemProbeSpecDB(".temp.db-events")
 
 	e := echo.New()
 	e.Use(middleware.Logger())
 	agentAPI := e.Group("/api/agent")
-	agentAPI.Use(setupContext(db))
+	agentAPI.Use(setupContext2(db2))
 	agentAPI.POST("/get-my-probe-specs", getMyProbeSpecs)
 	agentAPI.POST("/push-my-probe-results", pushMyProbeResults)
 	dashboardAPI := e.Group("/api/dashboard")
-	dashboardAPI.Use(setupContext(db))
+	dashboardAPI.Use(setupContext2(db2))
 	dashboardAPI.GET("/probe/results", getAllProbeResults)
 	dashboardAPI.GET("/probe/results/3dforce", getAllResults3DForceGraph)
 	dashboardAPI.GET("/probe/specs", listProbeSpecs)

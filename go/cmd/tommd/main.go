@@ -25,21 +25,25 @@ func main() {
 	var p = NewCachedProber()
 	var probed = 0
 	for {
-		var specs, err = getMyProbeTestingSpecs(baseURL)
-		fmt.Printf("getMyProbeSpecs: %s: err = %v\n", baseURL, err)
-		if err != nil {
-			time.Sleep(5 * time.Second)
-			continue
+
+		for _, i := range system.GetNetInterfaceAddresses() {
+			var ifaces = []string{i}
+			var specs, err = getMyProbeTestingSpecs(ifaces, baseURL)
+			fmt.Printf("getMyProbeSpecs: %s %s: err = %v\n", i, baseURL, err)
+			if err != nil {
+				time.Sleep(5 * time.Second)
+				continue
+			}
+			rv := p.RunProbSpecsConcurrent(ifaces, specs)
+			//	var _ = err
+			var _ = rv
+			fmt.Printf("probe results = %v (%d)\n", len(rv), p.Probed)
+			if p.Probed != probed {
+				err = pushMyProbeResults(baseURL, rv)
+				fmt.Printf("pushMyProbeResults: err = %v\n", err)
+			}
+			probed = p.Probed
 		}
-		rv := p.RunProbSpecsConcurrent(specs)
-		//	var _ = err
-		var _ = rv
-		fmt.Printf("probe results = %v (%d)\n", len(rv), p.Probed)
-		if p.Probed != probed {
-			err = pushMyProbeResults(baseURL, rv)
-			fmt.Printf("pushMyProbeResults: err = %v\n", err)
-		}
-		probed = p.Probed
 		fmt.Println("sleep ...")
 		time.Sleep(5 * time.Second)
 	}
@@ -51,9 +55,9 @@ func jsonIndent(v interface{}) string {
 	return string(b)
 }
 
-func getMyProbeTestingSpecs(baseURL string) ([]*dto.ProbeTestingSpec, error) {
+func getMyProbeTestingSpecs(ifaces []string, baseURL string) ([]*dto.ProbeTestingSpec, error) {
 
-	var ifaces = system.GetNetInterfaceAddresses()
+	//var ifaces = system.GetNetInterfaceAddresses()
 	var body = dto.MySources{
 		Sources: ifaces,
 	}
@@ -134,7 +138,7 @@ func (p *CachedProber) setCache(res *dto.ProbeResult) {
 	p.cache[k] = res
 }
 
-func (p *CachedProber) RunProbSpecsConcurrent(specs []*dto.ProbeTestingSpec) []*dto.ProbeResult {
+func (p *CachedProber) RunProbSpecsConcurrent(ifaces []string, specs []*dto.ProbeTestingSpec) []*dto.ProbeResult {
 	var rv = make([]*dto.ProbeResult, 0, len(specs))
 	var toprobe = make([]*dto.ProbeTestingSpec, 0, len(specs))
 
@@ -146,7 +150,7 @@ func (p *CachedProber) RunProbSpecsConcurrent(specs []*dto.ProbeTestingSpec) []*
 			p.Probed++
 		}
 	}
-	for _, r := range p.p.RunProbSpecsConcurrent(toprobe) {
+	for _, r := range p.p.RunProbSpecsConcurrent(ifaces, toprobe) {
 		p.setCache(r)
 		rv = append(rv, r)
 	}
