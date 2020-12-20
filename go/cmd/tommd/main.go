@@ -22,9 +22,13 @@ func main() {
 	if len(os.Args) > 1 {
 		baseURL = os.Args[1]
 	}
-	var p = NewCachedProber()
+	var p *CachedProber
 	var probed = 0
 	for {
+		if p == nil || p.Probed > 1000 {
+			p = NewCachedProber()
+			probed = 0
+		}
 
 		for _, i := range system.GetNetInterfaceAddresses() {
 			var ifaces = []string{i}
