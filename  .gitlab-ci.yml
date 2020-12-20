@@ -1,0 +1,56 @@
+# This file is a template, and might need editing before it works on your project.
+
+variables:
+  # Please edit to your GitLab project
+
+# The problem is that to be able to use go get, one needs to put
+# the repository in the $GOPATH. So for example if your gitlab domain
+# is gitlab.com, and that your repository is namespace/project, and
+# the default GOPATH being /go, then you'd need to have your
+# repository in /go/src/gitlab.com/namespace/project
+# Thus, making a symbolic link corrects this.
+#before_script:
+#  - mkdir -p $GOPATH/src/$(dirname $REPO_NAME)
+#  - ln -svf $CI_PROJECT_DIR/go $GOPATH/src/$REPO_NAME
+
+stages:
+  - test
+  - build1
+  - build2
+  - assemble
+
+#format:
+#  image: golang:latest
+#  stage: test
+#  script:
+#    - cd $GOPATH/src/$REPO_NAME
+#    - go fmt $(go list ./... | grep -v /vendor/)
+#    - go vet $(go list ./... | grep -v /vendor/)
+#    - go test -race $(go list ./... | grep -v /vendor/)
+
+build-go:
+  image: golang:latest
+  stage: build2
+  needs: ["build-ng"]
+  script:
+    - cd $CI_PROJECT_DIR/go/cmd/tommsrv
+    - go build 
+    - cd $CI_PROJECT_DIR/go/cmd/tommd
+    - go build
+  artifacts:
+    paths:
+      - go/go/cmd/tommsrv/tommsrv
+      - go/cmd/tommd/tommd
+
+build-ng:
+  image: node:10.15.3
+  stage: build1
+  needs: []
+  script:
+    - cd ng
+    - npm install
+    - npm run-script build
+  artifacts: 
+    paths:
+      - go/go/cmd/tommsrv/tommsrv/fist-ng
+    expire_in: 1 hour
