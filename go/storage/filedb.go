@@ -1,5 +1,6 @@
 package storage
 
+/*
 import (
 	"context"
 	"encoding/json"
@@ -184,3 +185,4 @@ func (s *SimpleProbSpecStore) PutStoredProbeSpecRule(ctx context.Context, id str
 	}
 	return s.DB.Save("rules", id, &dto.StoredProbeSpecRule{ID: id, Rule: data})
 }
+*/

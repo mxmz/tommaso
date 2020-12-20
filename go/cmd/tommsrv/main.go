@@ -20,14 +20,7 @@ type myContext struct {
 	probeResultStore ports.ProbeResultStore
 }
 
-func setupContext(db *storage.FileDB) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			return next(&myContext{c, &storage.SimpleProbSpecStore{DB: db}, &storage.VolatileProbResultStore{}})
-		}
-	}
-}
-func setupContext2(db *storage.MemProbeSpecDB) echo.MiddlewareFunc {
+func setupContext(db *storage.MemProbeSpecDB) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			return next(&myContext{c, storage.NewSyncMemProbeSpecDB(db), &storage.VolatileProbResultStore{}})
@@ -37,17 +30,16 @@ func setupContext2(db *storage.MemProbeSpecDB) echo.MiddlewareFunc {
 
 func main() {
 
-	//	var db = storage.DefaultFileDB()
-	var db2 = storage.NewMemProbeSpecDB(".temp.db-events")
+	var db = storage.NewMemProbeSpecDB(".temp.db-events")
 
 	e := echo.New()
 	e.Use(middleware.Logger())
 	agentAPI := e.Group("/api/agent")
-	agentAPI.Use(setupContext2(db2))
+	agentAPI.Use(setupContext(db))
 	agentAPI.POST("/get-my-probe-specs", getMyProbeSpecs)
 	agentAPI.POST("/push-my-probe-results", pushMyProbeResults)
 	dashboardAPI := e.Group("/api/dashboard")
-	dashboardAPI.Use(setupContext2(db2))
+	dashboardAPI.Use(setupContext(db))
 	dashboardAPI.GET("/probe/results", getAllProbeResults)
 	dashboardAPI.GET("/probe/results/3dforce", getAllResults3DForceGraph)
 	dashboardAPI.GET("/probe/specs", listProbeSpecs)
@@ -56,6 +48,7 @@ func main() {
 	dashboardAPI.GET("/probe/rules", listProbeSpecRules)
 	dashboardAPI.PUT("/probe/rules/:id", putProbeSpecRule)
 	dashboardAPI.DELETE("/probe/rules/:id", deleteProbeSpecRule)
+	dashboardAPI.DELETE("/probe", deleteProbes)
 	e.Use(middleware.StaticWithConfig(
 		middleware.StaticConfig{
 			Skipper: middleware.DefaultSkipper,
@@ -222,6 +215,21 @@ func deleteProbeSpec(c echo.Context) error {
 	var id = c.Param("id")
 	var err error
 	err = ctx.probeSpecStore.PutStoredProbeSpec(ctx.Context.Request().Context(), id, nil)
+	if err != nil {
+		return err
+	}
+	c.JSON(http.StatusNoContent, nil)
+	return nil
+}
+
+func deleteProbes(c echo.Context) error {
+	var ctx = c.(*myContext)
+	var err error
+	err = ctx.probeSpecStore.ClearAll(ctx.Context.Request().Context())
+	if err != nil {
+		return err
+	}
+	err = ctx.probeResultStore.ClearAll(ctx.Context.Request().Context())
 	if err != nil {
 		return err
 	}

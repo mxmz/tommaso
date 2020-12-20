@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"mxmz.it/mxmz/tommaso/dto"
+	"mxmz.it/mxmz/tommaso/ports"
 )
 
 type MemProbeSpecDB struct {
@@ -21,6 +22,8 @@ type MemProbeSpecDB struct {
 	probes        map[string]*dto.ProbeSpec
 	rules         map[string]*compiledProbeSpecRule
 }
+
+var _ ports.ProbeSpecStore = (*MemProbeSpecDB)(nil)
 
 type compiledProbeSpecRule struct {
 	dto.ProbeSpecRule
@@ -145,6 +148,25 @@ func (d *MemProbeSpecDB) applySetRuleEvent(e *SetRuleEvent) error {
 	return nil
 }
 
+func (d *MemProbeSpecDB) ClearAll(ctx context.Context) error {
+	var files, err = ioutil.ReadDir(d.eventStoreDir)
+	if err != nil {
+		panic(err)
+	}
+	for _, v := range files {
+		if v.Mode().IsRegular() {
+			var file = fmt.Sprintf("%s/%s", d.eventStoreDir, v.Name())
+			err := os.Remove(file)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+	d.probes = map[string]*dto.ProbeSpec{}
+	d.rules = map[string]*compiledProbeSpecRule{}
+	return nil
+}
+
 func (d *MemProbeSpecDB) init() {
 
 	var files, err = ioutil.ReadDir(d.eventStoreDir)
@@ -230,6 +252,11 @@ func (d *syncMemDB) PutStoredProbeSpecRule(ctx context.Context, id string, data 
 	defer d.lock.Unlock()
 	return d.db.PutStoredProbeSpecRule(ctx, id, data)
 }
+func (d *syncMemDB) ClearAll(ctx context.Context) error {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	return d.db.ClearAll(ctx)
+}
 
 func NewMemProbeSpecDB(path string) *MemProbeSpecDB {
 	os.MkdirAll(path, 0750)
@@ -247,3 +274,5 @@ func NewMemProbeSpecDB(path string) *MemProbeSpecDB {
 func NewSyncMemProbeSpecDB(db *MemProbeSpecDB) *syncMemDB {
 	return &syncMemDB{db: db}
 }
+
+var _ ports.ProbeSpecStore = (*syncMemDB)(nil)

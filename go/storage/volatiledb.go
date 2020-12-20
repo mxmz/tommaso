@@ -25,6 +25,14 @@ func (s *VolatileProbResultStore) LastUpdateAt(ctx context.Context) time.Time {
 	defer volatileResultsLock.RUnlock()
 	return volatileUpdatedAt
 }
+
+func (s *VolatileProbResultStore) ClearAll(ctx context.Context) error {
+	volatileResultsLock.Lock()
+	defer volatileResultsLock.Unlock()
+	volatileResults = map[string][]*dto.StoredProbeResult{}
+	return nil
+}
+
 func (s *VolatileProbResultStore) PutResultsForSources(ctx context.Context, results []*dto.ProbeResult) error {
 	var newResults = map[string][]*dto.StoredProbeResult{}
 	for _, r := range results {

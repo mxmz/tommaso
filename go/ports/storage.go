@@ -15,6 +15,7 @@ type ProbeSpecStore interface {
 
 	GetStoredProbeSpecRules(ctx context.Context) ([]*dto.StoredProbeSpecRule, error)
 	PutStoredProbeSpecRule(ctx context.Context, id string, data *dto.ProbeSpecRule) error
+	ClearAll(ctx context.Context) error
 }
 
 type ProbeResultStore interface {
@@ -22,4 +23,5 @@ type ProbeResultStore interface {
 	LastUpdateAt(ctx context.Context) time.Time
 	GetResultsBySourcePrefix(ctx context.Context, sourcePrefix string) ([]*dto.StoredProbeResult, error)
 	GetResultsWithSubstring(ctx context.Context, substr string) ([]*dto.StoredProbeResult, error)
+	ClearAll(ctx context.Context) error
 }
