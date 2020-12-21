@@ -47,10 +47,10 @@ build-ng:
   stage: build1
   needs: []
   script:
-    - cd ng
+    - cd ng/tommaso
     - npm install
     - npm run-script build
   artifacts: 
     paths:
-      - go/go/cmd/tommsrv/tommsrv/fist-ng
+      - go/cmd/tommsrv/tommsrv/fist-ng
     expire_in: 1 hour
