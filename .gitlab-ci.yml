@@ -35,12 +35,13 @@ build-go:
   script:
     - cd $CI_PROJECT_DIR/go/cmd/tommsrv
     - go build 
+    - mkdir dist-agent
     - cd $CI_PROJECT_DIR/go/cmd/tommd
-    - go build
+    - go build -o ../tommsrv/dist-agent
   artifacts:
     paths:
-      - go/go/cmd/tommsrv/tommsrv
-      - go/cmd/tommd/tommd
+      - go/cmd/tommsrv/tommsrv
+      - go/cmd/tommsrv/tommsrv/dist-agent
 
 build-ng:
   image: node:10.15.3
@@ -52,5 +53,5 @@ build-ng:
     - npm run-script build
   artifacts: 
     paths:
-      - go/cmd/tommsrv/tommsrv/fist-ng
-    expire_in: 1 hour
+      - go/cmd/tommsrv/tommsrv/dist-ng
+#    expire_in: 1 hour
