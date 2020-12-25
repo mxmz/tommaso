@@ -41,7 +41,7 @@ build-go:
   artifacts:
     paths:
       - go/cmd/tommsrv/tommsrv
-      - go/cmd/tommsrv/tommsrv/dist-agent
+      - go/cmd/tommsrv/dist-agent
 
 build-ng:
   image: node:10.15.3
@@ -53,5 +53,5 @@ build-ng:
     - npm run-script build
   artifacts: 
     paths:
-      - go/cmd/tommsrv/tommsrv/dist-ng
+      - go/cmd/tommsrv/dist-ng
 #    expire_in: 1 hour
