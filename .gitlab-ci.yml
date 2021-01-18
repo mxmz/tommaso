@@ -38,6 +38,7 @@ build-go:
     - mkdir dist-agent
     - cd $CI_PROJECT_DIR/go/cmd/tommd
     - go build -o ../tommsrv/dist-agent
+    - GOOS=windows go build -o ../tommsrv/dist-agent
   artifacts:
     paths:
       - go/cmd/tommsrv/tommsrv
