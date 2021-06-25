@@ -11,6 +11,10 @@ type ProbeResult struct {
 	Comment string            `json:"comment"`
 }
 
+func (r *ProbeResult) IsOK() bool {
+	return (r.Status == "OK" && !r.Spec.ExpectFailure) || (r.Status != "OK" && r.Spec.ExpectFailure)
+}
+
 type ProbeSpec struct {
 	Type        string   `json:"type"`
 	Args        []string `json:"args"`

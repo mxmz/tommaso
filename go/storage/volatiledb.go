@@ -37,6 +37,7 @@ func (s *VolatileProbResultStore) PutResultsForSources(ctx context.Context, resu
 	var newResults = map[string][]*dto.StoredProbeResult{}
 	for _, r := range results {
 		s := strings.Join(r.Sources, " ")
+		k := s + " " + r.Spec.Type + " " + strings.Join(r.Spec.Args, " ")
 		stored := dto.StoredProbeResult{
 			Source:        s,
 			Type:          r.Spec.Type,
@@ -47,9 +48,9 @@ func (s *VolatileProbResultStore) PutResultsForSources(ctx context.Context, resu
 			Comment:       r.Comment,
 			Description:   r.Spec.Description,
 			ExpectFailure: r.Spec.ExpectFailure,
-			Pass:          (r.Status == "OK" && !r.Spec.ExpectFailure) || (r.Status != "OK" && r.Spec.ExpectFailure),
+			Pass:          r.IsOK(),
 		}
-		newResults[s] = append(newResults[s], &stored)
+		newResults[k] = append(newResults[s], &stored)
 	}
 
 	volatileResultsLock.Lock()
@@ -115,13 +116,12 @@ func (s *VolatileProbResultStore) GetResultsWithSubstring(ctx context.Context, s
 		if areAllOlder(v, now) {
 			toBeRemoved = append(toBeRemoved, k)
 		} else {
-			if strings.Contains(k, substr) {
-				rv = append(rv, v...)
-			} else {
-				for _, l := range v {
-					if len(l.Args) > 0 && strings.Contains(l.Args[0], substr) {
-						rv = append(rv, l)
-					}
+			for _, l := range v {
+				if strings.Contains(k, l.Source) {
+					rv = append(rv, l)
+				}
+				if len(l.Args) > 0 && strings.Contains(l.Args[0], substr) {
+					rv = append(rv, l)
 				}
 			}
 		}
