@@ -44,6 +44,7 @@ build-go:
       - go/cmd/tommsrv/tommsrv
       - go/cmd/tommsrv/dist-agent
       - go/cmd/tommsrv/dist-ng
+      - go/cmd/tommsrv/3dforce
 
 build-ng:
   image: node:10.15.3
